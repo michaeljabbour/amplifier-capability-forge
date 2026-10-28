@@ -1,0 +1,88 @@
+{
+  "id": "forge",
+  "display_name": "Forge",
+  "kind": "skill",
+  "promise": "Run, inspect and coordinate persistent terminal sessions through the retained Forge daemon interface.",
+  "audience": "People and agents operating CLIs and TUIs.",
+  "trigger": "A task needs persistent PTYs, terminal apps or cross-harness terminal supervision.",
+  "skill_path": ".",
+  "skill_name": "amplifier-skill-forge",
+  "portable_include": [
+    "SKILL.md",
+    "LICENSE",
+    "references",
+    "tools"
+  ],
+  "modes": [
+    {
+      "name": "Drive",
+      "when": "An app needs an interactive terminal.",
+      "output": "A tagged session and observed terminal state."
+    },
+    {
+      "name": "Relay",
+      "when": "Several terminal workers share an artifact gate.",
+      "output": "A resumable ledger and verified artifact transitions."
+    },
+    {
+      "name": "Verify",
+      "when": "A command or TUI task needs acceptance evidence.",
+      "output": "Actual exit code or asserted screen state plus cleanup."
+    }
+  ],
+  "examples": [
+    {
+      "title": "Fictional terminal task",
+      "brief": "Observe a fictional local TUI until its ready state appears.",
+      "before": "A background process has no inspectable session or exit result.",
+      "after": "A tagged PTY is observed, asserted and closed after acceptance.",
+      "why": "Persistent state and explicit assertions make terminal work reviewable.",
+      "fictional": true
+    }
+  ],
+  "boundaries": [
+    "The portable helper is stdlib-only; real operations require a reachable Forge daemon. Doctor may start it; a fixture pass is not daemon acceptance."
+  ],
+  "install_commands": [
+    "python3 scripts/capability.py install --dest ~/.agents/skills"
+  ],
+  "runtime_install_commands": [
+    "python3 tools/forge.py doctor"
+  ],
+  "verification": [
+    {
+      "name": "Functional acceptance",
+      "command": "python3 scripts/functional_gate.py",
+      "expected": "Supplied fictional tasks exercise actual mechanisms and failure boundaries.",
+      "status": "passed",
+      "evidence": "34 native stdlib unit tests passed; no daemon was started for acceptance."
+    },
+    {
+      "name": "Native host acceptance",
+      "command": "See retained source integration guide",
+      "expected": "Actual provider/host/desktop/daemon/runner acceptance for the selected adapter.",
+      "status": "not-run",
+      "evidence": "No live model, real desktop transaction, invitation, deployment or production data migration was performed by this functional baseline."
+    }
+  ],
+  "sources": [
+    {
+      "repo": "amplifier-skill-forge",
+      "commit": "c74cbca5835a8c15d27b75e0f7ef80c4208f33cb",
+      "paths": [
+        "SKILL.md",
+        "tools",
+        "references",
+        "tests"
+      ],
+      "license": "MIT",
+      "role": "Retained canonical method, HTTP client, relay and test suite"
+    }
+  ],
+  "consolidation": [
+    "Primary owner repository retained; package only its existing portable method/tools/references."
+  ],
+  "docs": [
+    "docs/CONSOLIDATION.md"
+  ]
+}

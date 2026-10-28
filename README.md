@@ -1,5 +1,9 @@
 # amplifier-skill-forge
 
+## Consolidated portable package
+
+The existing root skill, HTTP client and relay remain canonical and path-compatible. Install the bounded package with `python3 scripts/capability.py install --dest ~/.agents/skills`. See [consolidation boundaries](docs/CONSOLIDATION.md). Native helpers and daemon protocol are retained; packaging tests do not demonstrate daemon availability.
+
 [![CI](https://github.com/michaeljabbour/amplifier-skill-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/michaeljabbour/amplifier-skill-forge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 

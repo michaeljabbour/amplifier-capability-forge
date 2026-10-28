@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-28",
+  "status": "local-functional-baseline",
+  "source_commit": "c74cbca5835a8c15d27b75e0f7ef80c4208f33cb",
+  "python": "3.12.5",
+  "fixture_content": "fictional",
+  "model_calls": 0,
+  "notes": "34 native stdlib unit tests passed; no daemon was started for acceptance.",
+  "limitations": [
+    "The portable helper is stdlib-only; real operations require a reachable Forge daemon. Doctor may start it; a fixture pass is not daemon acceptance."
+  ],
+  "files": {
+    "native.log": "74791c278f62aae15e7230df88592fbff503ae9b63ec368ece3429418d203c0a",
+    "functional.log": "9c27f665f30507ffaeb2cb846c211f8106a3008e4fdac50f9af3ea2f4dad9273"
+  }
+}

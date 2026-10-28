@@ -1,0 +1,6 @@
+test_native_client_help_is_independent_of_daemon (__main__.Gate.test_native_client_help_is_independent_of_daemon) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.049s
+
+OK
