@@ -33,7 +33,7 @@
   "examples": [
     {
       "title": "Fictional terminal task",
-      "brief": "Observe a fictional local TUI until its ready state appears.",
+      "brief": "Use Forge to plan a disposable TUI smoke test. Check daemon availability first, create one named session, wait for the ready screen, capture the observed state and close only the session created for this test. Do not change permissions or launch additional agents.",
       "before": "A background process has no inspectable session or exit result.",
       "after": "A tagged PTY is observed, asserted and closed after acceptance.",
       "why": "Persistent state and explicit assertions make terminal work reviewable.",
@@ -85,5 +85,58 @@
   "docs": [
     "docs/CONSOLIDATION.md"
   ],
-  "publication_status": "Installation and evidence scopes are documented below."
+  "publication_status": "Installation and evidence scopes are documented below.",
+  "marketing": {
+    "headline": "Keep terminal work alive, visible and testable.",
+    "lead": "For people and agents driving CLIs and terminal apps. Forge gives a persistent session a name, lets you inspect its screen and output, and keeps a clear test and cleanup path when the conversation moves on.",
+    "benefits": [
+      {
+        "title": "Return to a running task",
+        "body": "Use a named PTY session rather than losing the state of an interactive terminal between turns."
+      },
+      {
+        "title": "Check the app itself",
+        "body": "Read rendered screens, wait for a specific state and assert what appeared."
+      },
+      {
+        "title": "Coordinate through artifacts",
+        "body": "Use the optional relay ledger when several workers need an inspectable handoff and acceptance gate."
+      }
+    ],
+    "walkthrough": [
+      {
+        "title": "Check the connection",
+        "detail": "Run the helper’s doctor before a real operation; it can start or repair the local Forge daemon."
+      },
+      {
+        "title": "Drive a named session",
+        "detail": "Create a tagged terminal, send commands or keys and inspect the returned screen or output."
+      },
+      {
+        "title": "Assert and clean up",
+        "detail": "Record the actual exit code or screen condition, then close the session or only the tag you created."
+      }
+    ],
+    "use_when": [
+      "A command needs an interactive terminal or survives multiple turns.",
+      "You are testing a TUI through actual key input and observed screens.",
+      "Several terminal workers coordinate through a shared artifact gate."
+    ],
+    "not_for": [
+      "Replacing ordinary subagents for a simple code edit.",
+      "Assuming a daemon is reachable because the skill installed successfully."
+    ],
+    "quickstart_prompt": "Use Forge to plan a disposable TUI smoke test. Check daemon availability first, create one named session, wait for the ready screen, capture the observed state and close only the session created for this test. Do not change permissions or launch additional agents.",
+    "output_preview": "Session: demo-tui-smoke\nTag: disposable-check\nStart: launch the selected TUI in its project folder\nObserve: rendered screen and incremental output\nAccept: the agreed ready label is visible\nCleanup: close demo-tui-smoke\n\nFor a one-shot build: use exec and retain its exit code.",
+    "example_note": "Fictional test plan. No terminal daemon or session was started for this illustration.",
+    "install_notes": [
+      "Python 3.11 or later is required by the portable install/build helper. The installed method runs through your agent host.",
+      "The packaged Python HTTP client and relay are stdlib-only.",
+      "Real terminal operations need a reachable Forge daemon; the native guide covers its Node/Bun installation.",
+      "Doctor can start the daemon and repair its helper. Read that behavior before running it on a shared machine."
+    ],
+    "proof_summary": "Unit and isolated integration checks cover client and relay behavior. The portable release check deliberately does not start a daemon or prove that a particular TUI works.",
+    "next_step": "Try one disposable terminal task, then inspect and close the session you created."
+  },
+  "repository_url": "https://github.com/michaeljabbour/amplifier-skill-forge"
 }

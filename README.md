@@ -1,4 +1,55 @@
-# amplifier-skill-forge
+# Forge
+
+Keep terminal work alive, visible and testable.
+
+For people and agents driving CLIs and terminal apps. Forge gives a persistent session a name, lets you inspect its screen and output, and keeps a clear test and cleanup path when the conversation moves on.
+
+[Explore the site](https://michaeljabbour.github.io/amplifier-skill-forge/)
+
+## What you get
+
+- **Return to a running task.** Use a named PTY session rather than losing the state of an interactive terminal between turns.
+- **Check the app itself.** Read rendered screens, wait for a specific state and assert what appeared.
+- **Coordinate through artifacts.** Use the optional relay ledger when several workers need an inspectable handoff and acceptance gate.
+
+## Start here
+
+```sh
+git clone https://github.com/michaeljabbour/amplifier-skill-forge.git
+cd amplifier-skill-forge
+python3 scripts/capability.py install --dest ~/.agents/skills
+```
+
+This installs the portable method and its packaged references into your agent skill folder. If your host uses another folder, pass that path to `--dest`. Start a new session or use your host’s skill refresh so it can discover the installed skill. Optional native tools are installed separately.
+
+Try this first task:
+
+> Use Forge to plan a disposable TUI smoke test. Check daemon availability first, create one named session, wait for the ready screen, capture the observed state and close only the session created for this test. Do not change permissions or launch additional agents.
+
+## What you need
+
+- Python 3.11 or later for the portable install helper.
+- The packaged Python HTTP client and relay are stdlib-only.
+- Real terminal operations need a reachable Forge daemon; the native guide covers its Node/Bun installation.
+- Doctor can start the daemon and repair its helper. Read that behavior before running it on a shared machine.
+
+For the optional native interface, use a project virtual environment:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python3 tools/forge.py doctor
+```
+
+## Evidence and limits
+
+Unit and isolated integration checks cover client and relay behavior. The portable release check deliberately does not start a daemon or prove that a particular TUI works.
+
+The worked examples on the site are fictional. They illustrate the output and decisions; they are not user results or measured benefit. See [consolidation and runtime boundaries](docs/CONSOLIDATION.md) for retained interfaces and acceptance scope.
+
+---
+
+## Native guide
 
 ## Consolidated portable package
 
