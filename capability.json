@@ -138,5 +138,12 @@
     "proof_summary": "Unit and isolated integration checks cover client and relay behavior. The portable release check deliberately does not start a daemon or prove that a particular TUI works.",
     "next_step": "Try one disposable terminal task, then inspect and close the session you created."
   },
-  "repository_url": "https://github.com/michaeljabbour/amplifier-skill-forge"
+  "repository_url": "https://github.com/michaeljabbour/amplifier-skill-forge",
+  "film": {
+    "file": "forge-film",
+    "seconds": 62,
+    "heading": "Out of sight, out of mind.",
+    "blurb": "In 62 seconds, an agent starts a long job in the terminal, the chat moves on, and nobody knows if it finished. Forge names the session, calls it back, reads the screen, waits for ready, checks what is really there and closes only what this task opened. Captions are on the player; a transcript is below.",
+    "note": "The terminals and jobs are a fictional example. The film shows how the skill behaves; it does not report results."
+  }
 }

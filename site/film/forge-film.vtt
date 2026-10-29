@@ -1,0 +1,43 @@
+WEBVTT
+
+00:00:00.280 --> 00:00:03.190
+Your agent starts a long job in the terminal.
+
+00:00:04.480 --> 00:00:07.760
+Then the chat moves on, and the job slides out of sight.
+
+00:00:09.520 --> 00:00:13.940
+Down here, nobody knows if it finished, or if it passed.
+
+00:00:16.980 --> 00:00:18.430
+Forge gives the session a name.
+
+00:00:21.020 --> 00:00:22.430
+Call it back any time.
+
+00:00:26.760 --> 00:00:27.730
+Read the screen.
+
+00:00:28.080 --> 00:00:28.930
+Wait for ready.
+
+00:00:29.380 --> 00:00:31.090
+Check what’s actually there.
+
+00:00:35.000 --> 00:00:37.150
+Then close what this task opened.
+
+00:00:37.380 --> 00:00:38.210
+Only that.
+
+00:00:43.340 --> 00:00:44.810
+It needs the Forge daemon.
+
+00:00:45.180 --> 00:00:47.550
+The doctor checks first.
+
+00:00:55.100 --> 00:00:56.000
+Forge.
+
+00:00:56.600 --> 00:00:59.810
+Keep terminal work alive, visible and testable.

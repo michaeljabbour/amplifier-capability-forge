@@ -2,6 +2,8 @@
 
 Keep terminal work alive, visible and testable.
 
+Watch the [62-second film](https://michaeljabbour.github.io/amplifier-skill-forge/#film): a long terminal job the chat forgot, and how the skill names it, checks it and closes only what it opened. The example in it is fictional.
+
 For people and agents driving CLIs and terminal apps. Forge gives a persistent session a name, lets you inspect its screen and output, and keeps a clear test and cleanup path when the conversation moves on.
 
 [Explore the site](https://michaeljabbour.github.io/amplifier-skill-forge/)

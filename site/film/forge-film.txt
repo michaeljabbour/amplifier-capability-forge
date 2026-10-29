@@ -1,0 +1,10 @@
+Your agent starts a long job in the terminal.
+Then the chat moves on, and the job slides out of sight.
+Down here, nobody knows if it finished, or if it passed.
+Forge gives the session a name.
+Call it back any time.
+Read the screen. Wait for ready. Check what’s actually there.
+Then close what this task opened. Only that.
+It needs the Forge daemon. The doctor checks first.
+On screen: Name it. Watch it. Close it.
+Forge. Keep terminal work alive, visible and testable.
