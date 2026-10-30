@@ -65,13 +65,13 @@ install_copy() {
   fi
   if command -v rsync >/dev/null 2>&1; then
     rsync -a --delete \
-      --exclude '.git' --exclude '__pycache__' --exclude '.DS_Store' \
+      --exclude '.git' --exclude '.research' --exclude '__pycache__' --exclude '.DS_Store' \
       --exclude '.ruff_cache' --exclude '.pytest_cache' --exclude '.venv' \
       "$SKILL_DIR/" "$dest/"
   else
     rm -rf "$dest"
     mkdir -p "$dest"
-    (cd "$SKILL_DIR" && tar cf - --exclude .git --exclude __pycache__ \
+    (cd "$SKILL_DIR" && tar cf - --exclude .git --exclude .research --exclude __pycache__ \
       --exclude .DS_Store --exclude .ruff_cache --exclude .pytest_cache \
       --exclude .venv .) | (cd "$dest" && tar xf -)
   fi

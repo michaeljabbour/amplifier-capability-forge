@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-30 — Stable discovery identity
+
+- Verify the declared and installed `amplifier-skill-forge` directory rather than assuming a checkout basename matches it. The public repository can use its capability name while existing discovery routes stay compatible.
+- Keep local `.research` files out of the legacy installer's real copies, including its tar fallback. Source links retain their existing behavior; the shared pinned installer copies only declared tracked files.
+
 ## 2026-10-28 — Film sound
 
 - Remix the film so the score plays through without skips and ends on its own final chord instead of restarting under the end card. Smoother ducking under the voice, sound effects kept below the narrator, and crossfaded joins in the 15-second cut.

@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -19,15 +20,17 @@ class InstallTests(unittest.TestCase):
         self.base = Path(self.temp.name)
         self.home = self.base / "test home"
         self.home.mkdir()
-        self.source = self.base / "source checkout" / NAME
+        # Reproduce a clone under the public capability name: installation
+        # must retain the existing discovery name rather than the basename.
+        self.source = self.base / "source checkout" / "amplifier-capability-forge"
         (self.source / "scripts").mkdir(parents=True)
         shutil.copy2(ROOT / "scripts/install.sh", self.source / "scripts/install.sh")
-        self.write_source("SKILL.md", "---\nname: amplifier-skill-forge\ndescription: Test skill\n---\n")
+        self.write_source("SKILL.md", (ROOT / "SKILL.md").read_text(encoding="utf-8"))
         self.write_source("tools/forge.py", "print('original')\n")
         (self.source / "tools/forge.py").chmod(0o755)
         self.write_source("references/guide.md", "Reference\n")
         self.write_source("agents/openai.yaml", "interface: {}\n")
-        for excluded in (".git", "__pycache__", ".ruff_cache", ".pytest_cache", ".venv"):
+        for excluded in (".git", ".research", "__pycache__", ".ruff_cache", ".pytest_cache", ".venv"):
             self.write_source(excluded + "/sentinel", "Do not install\n")
         self.write_source(".DS_Store", "Do not install\n")
         self.env = dict(os.environ, HOME=str(self.home), CODEX_HOME=str(self.home / ".codex"))
@@ -59,15 +62,22 @@ class InstallTests(unittest.TestCase):
         return result
 
     def assert_copies(self):
+        self.assertNotEqual(self.source.name, NAME)
         for harness in (".agents", ".amplifier"):
             boundary = self.home / harness / "skills"
             dest = boundary / NAME
             self.assertTrue(dest.is_dir())
             self.assertFalse(dest.is_symlink())
+            installed_name = re.search(
+                r"^name:\s*[\"']?([^\"'\n]+)",
+                (dest / "SKILL.md").read_text(encoding="utf-8"), re.MULTILINE,
+            )
+            self.assertIsNotNone(installed_name)
+            self.assertEqual(installed_name.group(1).strip(), dest.name)
             for relative in ("SKILL.md", "tools/forge.py", "references/guide.md", "agents/openai.yaml"):
                 self.assertEqual((dest / relative).read_bytes(), (self.source / relative).read_bytes())
             self.assertTrue(os.access(dest / "tools/forge.py", os.X_OK))
-            for excluded in (".git", "__pycache__", ".ruff_cache", ".pytest_cache", ".venv", ".DS_Store"):
+            for excluded in (".git", ".research", "__pycache__", ".ruff_cache", ".pytest_cache", ".venv", ".DS_Store"):
                 self.assertFalse((dest / excluded).exists(), str(dest / excluded))
             # Mirrors the scanner's boundary check, including every descendant.
             for path in [dest, *dest.rglob("*")]:

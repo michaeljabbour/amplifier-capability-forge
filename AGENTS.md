@@ -1,8 +1,9 @@
-# amplifier-skill-forge — Agent Conventions
+# amplifier-capability-forge — Agent Conventions
 
-This repository IS an Agent Skill (see [SKILL.md](SKILL.md)); the repo root is
-the skill root, and the directory/symlink name must stay `amplifier-skill-forge`
-to match the `name:` frontmatter.
+This repository distributes an Agent Skill (see [SKILL.md](SKILL.md)). A checkout
+can use the public repository name or any local directory name. The installed
+discovery directory/symlink must stay `amplifier-skill-forge` to match the `name:`
+frontmatter; preserve that interface across repository renames.
 
 ## For agents working IN this repo
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import re
 import unittest
 
@@ -32,10 +33,17 @@ def folded_field(lines, key):
 
 
 class SkillContractTests(unittest.TestCase):
-    def test_name_matches_repository_directory(self):
+    def test_name_matches_declared_portable_install_directory(self):
         lines, _ = frontmatter_and_body()
-        self.assertEqual(folded_field(lines, "name"), ROOT.name)
-        self.assertRegex(ROOT.name, r"^[a-z0-9-]+$")
+        name = folded_field(lines, "name")
+        capability = json.loads((ROOT / "capability.json").read_text(encoding="utf-8"))
+        # A checkout can have any name. The installed discovery directory is
+        # the stable Agent Skills identity, even after a repository rename.
+        self.assertEqual(name, capability["skill_name"])
+        self.assertEqual(name, capability["portable_method"]["name"])
+        self.assertEqual(name, "amplifier-skill-forge")
+        self.assertRegex(name, r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+        self.assertLessEqual(len(name), 64)
 
     def test_description_is_trigger_rich_and_within_limit(self):
         lines, _ = frontmatter_and_body()
