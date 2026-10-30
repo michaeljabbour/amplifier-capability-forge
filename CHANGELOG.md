@@ -3,7 +3,7 @@
 ## 2026-10-30 — Stable discovery identity
 
 - Verify the declared and installed `amplifier-skill-forge` directory rather than assuming a checkout basename matches it. The public repository can use its capability name while existing discovery routes stay compatible.
-- Keep local `.research` files out of the legacy installer's real copies, including its tar fallback. Source links retain their existing behavior; the shared pinned installer copies only declared tracked files.
+- Keep local `.research` files out of the legacy installer's real copies, including its tar fallback. If an older real copy contains local research, refuse installation until it is preserved outside the discovery directory. Source links retain their existing behavior; the shared pinned installer copies only declared tracked files.
 
 ## 2026-10-28 — Film sound
 

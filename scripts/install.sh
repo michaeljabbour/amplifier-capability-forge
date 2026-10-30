@@ -27,6 +27,22 @@ for arg in "$@"; do
   esac
 done
 
+check_copy_destination() {
+  local dest="$1"
+  # Do not follow an old source symlink: replacing the link preserves its
+  # target. A real installed copy can contain private local work, however.
+  if [ ! -L "$dest" ] && { [ -e "$dest/.research" ] || [ -L "$dest/.research" ]; }; then
+    echo "Refusing to replace existing local research: $dest/.research" >&2
+    echo "Preserve it outside the discovery directory before rerunning the installer." >&2
+    exit 2
+  fi
+}
+
+# Refuse before creating links or refreshing either copy. Excluding a path
+# alone would retain a stale rsync copy or erase it in the tar fallback.
+check_copy_destination "$HOME/.agents/skills/$NAME"
+check_copy_destination "$HOME/.amplifier/skills/$NAME"
+
 link() {
   local target_dir="$1" label="$2"
   local dest="$target_dir/$NAME"
@@ -53,6 +69,7 @@ link "$HOME/.claude/skills" "Claude Code + OpenCode"
 install_copy() {
   local target_dir="$1" label="$2" dest
   dest="$target_dir/$NAME"
+  check_copy_destination "$dest"
   if [ "$DRY" = 1 ]; then
     echo "would copy: $SKILL_DIR -> $dest   ($label)"
     return

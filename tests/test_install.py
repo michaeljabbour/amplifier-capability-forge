@@ -128,6 +128,22 @@ class InstallTests(unittest.TestCase):
         self.assertTrue(dest.is_symlink())
         self.assertEqual(before, sorted(str(p) for p in self.home.rglob("*")))
 
+    def test_existing_local_research_is_preserved_and_install_refuses(self):
+        private = self.home / ".agents/skills" / NAME / ".research/market/keep.txt"
+        private.parent.mkdir(parents=True)
+        private.write_text("private fixture; preserve", encoding="utf-8")
+        before = sorted(str(p) for p in self.home.rglob("*"))
+        for arguments in ([], ["--check"]):
+            with self.subTest(arguments=arguments):
+                result = subprocess.run(
+                    ["/bin/bash", str(self.source / "scripts/install.sh"), *arguments],
+                    env=self.env, text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("Preserve it outside the discovery directory", result.stderr)
+                self.assertEqual(private.read_text(encoding="utf-8"), "private fixture; preserve")
+                self.assertEqual(before, sorted(str(p) for p in self.home.rglob("*")))
+
 
 if __name__ == "__main__":
     unittest.main()
