@@ -420,3 +420,7 @@ See [AGENTS.md](AGENTS.md) for repository invariants and
 ## License
 
 [MIT](LICENSE) © 2026 Michael J. Jabbour
+
+## Repository migration
+
+This repository was renamed from `amplifier-skill-forge` to `amplifier-capability-forge`. Existing installed method names, bundle aliases and native interfaces stay the same. See the [migration guide](https://michaeljabbour.github.io/migration/) and [repository map](https://michaeljabbour.github.io/migration/mapping.json) for source URL updates.
