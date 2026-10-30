@@ -106,7 +106,7 @@
     "walkthrough": [
       {
         "title": "Check the connection",
-        "detail": "Run the helper’s doctor before a real operation; it can start or repair the local Forge daemon."
+        "detail": "Run the helper\u2019s doctor before a real operation; it can start or repair the local Forge daemon."
       },
       {
         "title": "Drive a named session",
@@ -138,12 +138,90 @@
     "proof_summary": "Unit and isolated integration checks cover client and relay behavior. The portable release check deliberately does not start a daemon or prove that a particular TUI works.",
     "next_step": "Try one disposable terminal task, then inspect and close the session you created."
   },
-  "repository_url": "https://github.com/michaeljabbour/amplifier-skill-forge",
+  "repository_url": "https://github.com/michaeljabbour/amplifier-capability-forge",
+  "name": "amplifier-capability-forge",
+  "legacy_names": [
+    "amplifier-skill-forge"
+  ],
+  "contract_version": "amplifier-capability/v1",
+  "version": null,
+  "version_basis": "No release version recorded; installer requires a full Git revision pin.",
+  "engine": "LLM",
+  "engine_components": {
+    "caller_method": "LLM"
+  },
+  "surfaces": [
+    "agent-skills"
+  ],
+  "portable_method": {
+    "name": "amplifier-skill-forge",
+    "path": ".",
+    "include": [
+      "SKILL.md",
+      "LICENSE",
+      "references",
+      "tools"
+    ],
+    "contract": "Agent Skills directory; caller applies the method; no independent execution loop is installed."
+  },
+  "interfaces": {
+    "portable": {
+      "input": "Caller task and explicitly authorized context",
+      "output": "Run, inspect and coordinate persistent terminal sessions through the retained Forge daemon interface.",
+      "failure": "Report insufficient evidence, unsupported context or host limitation; never turn discovery into an execution claim."
+    },
+    "native": {
+      "distribution": null,
+      "entrypoints": {},
+      "docs": [
+        "docs/CONSOLIDATION.md"
+      ],
+      "status": "Existing declared entrypoints preserved; runtime signatures, service access and installation tests remain separate evidence."
+    },
+    "host_adapters": {
+      "amplifier_bundle": null,
+      "grants_autonomy": false
+    }
+  },
+  "permissions": {
+    "installation": {
+      "network": false,
+      "executes_capability_code": false,
+      "writes": [
+        "Selected discovery folders",
+        ".capability-state transaction backups"
+      ],
+      "grants_runtime_permissions": false
+    },
+    "runtime": {
+      "status": "Host/caller authorizes each operation; installation is not a tool allowlist or standing approval.",
+      "declared_boundaries": [
+        "The portable helper is stdlib-only; real operations require a reachable Forge daemon. Doctor may start it; a fixture pass is not daemon acceptance."
+      ]
+    },
+    "secret_names": {
+      "discovery_requires": [],
+      "native_runtime_inventory": "See native documentation; no credentials are bundled or inferred."
+    }
+  },
+  "dataflow": {
+    "installation": "Read pinned tracked portable source and copy locally with SHA-256 receipts. No source text is transmitted.",
+    "method": "Caller supplies authorized context; existing promise and boundaries govern output.",
+    "native_runtime": "Provider/network/storage flows are owned by native interfaces and host authorization; these files do not enable them."
+  },
+  "source_policy": {
+    "revision": "Explicit full40-character Git commit required at installation; never infer latest.",
+    "repository_rename": "Public identity may change; skill folder, imports, entrypoints, tool IDs and schemas remain stable.",
+    "research": ".research/market remains local and ignored; AGENTS governs refresh."
+  },
   "film": {
     "file": "forge-film",
     "seconds": 62,
     "heading": "Out of sight, out of mind.",
     "blurb": "In 62 seconds, an agent starts a long job in the terminal, the chat moves on, and nobody knows if it finished. Forge names the session, calls it back, reads the screen, waits for ready, checks what is really there and closes only what this task opened. Captions are on the player; a transcript is below.",
     "note": "The terminals and jobs are a fictional example. The film shows how the skill behaves; it does not report results."
-  }
+  },
+  "repository_aliases": [
+    "https://github.com/michaeljabbour/amplifier-skill-forge"
+  ]
 }
