@@ -187,3 +187,7 @@ resolve instances): poll their file ledgers (`checkpoint.json`, `state.json`,
 Fresher ground truth for Amplifier lives in `~/.amplifier/cache/amplifier-foundation-*/docs/`
 and the in-app experts (`amplifier:amplifier-expert`, `foundation:foundation-expert`,
 `core:core-expert`).
+
+## Optional coaching checkpoint
+
+Read [the local coaching guide](references/coaching-session.v1.md) only when the person asks for practice or optional session bookkeeping. Keep native operations direct and unattended; the guide adds only a separate opt-in pre/post review.

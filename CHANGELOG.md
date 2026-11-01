@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — optional coaching checkpoint
+
+- Add a self-contained opt-in practice/review guide with a fictional task, preserved baseline, explicit scope/budget, user stop, reviewed keep/revert and private-by-choice records. Keep native operations, existing method budgets and evidence rules unchanged; no human efficacy or outside-use result is claimed.
+
 ## 2026-10-30 — Stable discovery identity
 
 - Verify the declared and installed `amplifier-skill-forge` directory rather than assuming a checkout basename matches it. The public repository can use its capability name while existing discovery routes stay compatible.
