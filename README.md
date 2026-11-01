@@ -2,11 +2,11 @@
 
 Keep terminal work alive, visible and testable.
 
-Watch the [62-second film](https://michaeljabbour.github.io/amplifier-skill-forge/#film): a long terminal job the chat forgot, and how the skill names it, checks it and closes only what it opened. The example in it is fictional.
+Watch the [62-second film](https://michaeljabbour.github.io/amplifier-capability-forge/#film): a long terminal job the chat forgot, and how the skill names it, checks it and closes only what it opened. The example in it is fictional.
 
 For people and agents driving CLIs and terminal apps. Forge gives a persistent session a name, lets you inspect its screen and output, and keeps a clear test and cleanup path when the conversation moves on.
 
-[Explore the site](https://michaeljabbour.github.io/amplifier-skill-forge/)
+[Explore the site](https://michaeljabbour.github.io/amplifier-capability-forge/)
 
 ## What you get
 
@@ -17,8 +17,8 @@ For people and agents driving CLIs and terminal apps. Forge gives a persistent s
 ## Start here
 
 ```sh
-git clone https://github.com/michaeljabbour/amplifier-skill-forge.git
-cd amplifier-skill-forge
+git clone https://github.com/michaeljabbour/amplifier-capability-forge.git
+cd amplifier-capability-forge
 python3 scripts/capability.py install --dest ~/.agents/skills
 ```
 
@@ -57,7 +57,7 @@ The worked examples on the site are fictional. They illustrate the output and de
 
 The existing root skill, HTTP client and relay remain canonical and path-compatible. Install the bounded package with `python3 scripts/capability.py install --dest ~/.agents/skills`. See [consolidation boundaries](docs/CONSOLIDATION.md). Native helpers and daemon protocol are retained; packaging tests do not demonstrate daemon availability.
 
-[![CI](https://github.com/michaeljabbour/amplifier-skill-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/michaeljabbour/amplifier-skill-forge/actions/workflows/ci.yml)
+[![CI](https://github.com/michaeljabbour/amplifier-capability-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/michaeljabbour/amplifier-capability-forge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Give Claude Code, OpenAI Codex, OpenCode, Gemini, and Microsoft Amplifier a
@@ -124,8 +124,8 @@ can resume from the same state file.
 ## Install the skill
 
 ```bash
-git clone https://github.com/michaeljabbour/amplifier-skill-forge.git
-cd amplifier-skill-forge
+git clone https://github.com/michaeljabbour/amplifier-capability-forge.git
+cd amplifier-capability-forge
 ./scripts/install.sh --check
 ./scripts/install.sh
 ```
@@ -158,7 +158,7 @@ tools:
     source: git+https://github.com/microsoft/amplifier-bundle-skills@main#subdirectory=modules/tool-skills
     config:
       skills:
-        - "git+https://github.com/michaeljabbour/amplifier-skill-forge@main"
+        - "git+https://github.com/michaeljabbour/amplifier-capability-forge@main"
 ```
 
 Skill discovery walks the cloned repo and keys on the root `SKILL.md`, so the
