@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-01 — Transport and operator boundaries
+
+- Keep the daemon local by default; require explicit remote HTTPS opt-in and refuse URL credentials, redirects and ambient proxy forwarding.
+- Bind private protocol-session cache records to their endpoint, refuse unsafe cache files, and leave daemon terminals/history untouched.
+- Retry only MCP expired-session 404 responses; report other HTTP failures without silently repeating a command.
+- Replace destructive recovery, trust-bypass and unreviewed installer shortcuts with scoped diagnosis and operator review.
+
 ## Unreleased — optional coaching checkpoint
 
 - Add a self-contained opt-in practice/review guide with a fictional task, preserved baseline, explicit scope/budget, user stop, reviewed keep/revert and private-by-choice records. Keep native operations, existing method budgets and evidence rules unchanged; no human efficacy or outside-use result is claimed.

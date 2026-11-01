@@ -38,38 +38,91 @@ All spawn-* print the new session id; drive follow-ups with `submit` (claude)
 or `type`+`key enter` (codex/gemini), and watch with `screen`/`wait`.
 """
 import argparse
+import hashlib
+import http.client
+import ipaddress
 import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 import uuid
 from typing import Any
 
-URL = os.environ.get("FORGE_URL", "http://127.0.0.1:3141/mcp")
+DEFAULT_URL = "http://127.0.0.1:3141/mcp"
+URL = os.environ.get("FORGE_URL", DEFAULT_URL)
 SESSION_FILE = os.path.expanduser("~/.cache/forge-py-mcp-session")
 
 ANSI = re.compile(r"\x1b\][^\x07]*\x07|\x1b\[[0-9;?]*[a-zA-Z]|\x1b[=>]|\r")
+
+
+def _endpoint():
+    """The daemon is local unless the caller explicitly selects remote HTTPS."""
+    try:
+        if not isinstance(URL, str) or len(URL) > 2048 or any(not 33 <= ord(c) <= 126 for c in URL):
+            raise ValueError
+        parsed = urllib.parse.urlsplit(URL)
+        host, port = parsed.hostname, parsed.port
+        if (parsed.scheme not in {"http", "https"} or not host or
+                parsed.username is not None or parsed.password is not None or
+                parsed.query or parsed.fragment or "\\" in URL or "%" in host or
+                (port is not None and not 1 <= port <= 65535)):
+            raise ValueError
+        try:
+            local = ipaddress.ip_address(host).is_loopback
+        except ValueError:
+            local = host.lower() == "localhost"
+        if not local and (parsed.scheme != "https" or os.environ.get("FORGE_ALLOW_REMOTE") != "1"):
+            raise ValueError
+        authority = "[" + host.lower() + "]" if ":" in host else host.lower()
+        if port is not None:
+            authority += ":" + str(port)
+        return urllib.parse.urlunsplit((parsed.scheme, authority, parsed.path or "/", "", ""))
+    except (ValueError, TypeError):
+        raise SystemExit("forge: invalid endpoint; use loopback HTTP(S), or explicitly opt into remote HTTPS with FORGE_ALLOW_REMOTE=1. URL credentials, query strings and fragments are refused.") from None
+
+
+def _session_id(value):
+    if not isinstance(value, str) or not 1 <= len(value) <= 1024 or any(not 33 <= ord(c) <= 126 for c in value):
+        raise SystemExit("forge: invalid daemon session identifier")
+    return value
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise SystemExit("forge: endpoint redirects are refused; configure the reviewed final endpoint directly")
 
 
 def _post(payload, sid=None):
     headers = {"Content-Type": "application/json",
                "Accept": "application/json, text/event-stream"}
     if sid:
-        headers["mcp-session-id"] = sid
-    req = urllib.request.Request(URL, data=json.dumps(payload).encode(), headers=headers)
-    with urllib.request.urlopen(req, timeout=630) as r:
+        headers["mcp-session-id"] = _session_id(sid)
+    req = urllib.request.Request(_endpoint(), data=json.dumps(payload).encode(), headers=headers)
+    # A configured environment proxy or HTTP redirect must not receive local
+    # command/prompt data or the daemon's session header.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    with opener.open(req, timeout=630) as r:
         new_sid = r.headers.get("mcp-session-id")
+        content_type = r.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
         body = r.read().decode()
-    msgs = []
-    for block in body.split("\n\n"):
-        data = "\n".join(l[6:] for l in block.split("\n") if l.startswith("data: "))
-        if data:
-            msgs.append(json.loads(data))
+    if content_type == "application/json":
+        value = json.loads(body)
+        msgs = value if isinstance(value, list) else [value]
+    else:
+        msgs = []
+        for block in body.split("\n\n"):
+            data = "\n".join(l[6:] for l in block.split("\n") if l.startswith("data: "))
+            if data:
+                msgs.append(json.loads(data))
+    if any(not isinstance(msg, dict) for msg in msgs):
+        raise ValueError("Invalid protocol message shape")
     expected_id = payload.get("id")
     if expected_id is not None:
         matching = [msg for msg in msgs if msg.get("id") == expected_id]
@@ -81,42 +134,128 @@ def _request_id():
     return uuid.uuid4().hex
 
 
+def _cache_parent():
+    path = os.path.abspath(SESSION_FILE)
+    parent, name = os.path.split(path)
+    if not name or not hasattr(os, "O_NOFOLLOW") or os.open not in os.supports_dir_fd:
+        raise SystemExit("forge: private session cache requires POSIX no-follow file operations")
+    fd = None
+    try:
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        fd = os.open(parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        info = os.fstat(fd)
+        if info.st_uid != os.getuid() or info.st_mode & 0o022:
+            raise OSError
+        return fd, name
+    except OSError:
+        if fd is not None:
+            os.close(fd)
+        raise SystemExit("forge: session cache directory must be owned, private from other writers, and not a symlink") from None
+
+
+def _cached_session(endpoint):
+    parent, name = _cache_parent()
+    try:
+        try:
+            fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        except FileNotFoundError:
+            return None
+        except OSError:
+            raise SystemExit("forge: refusing unsafe session cache file") from None
+        with os.fdopen(fd, "rb") as stream:
+            info = os.fstat(stream.fileno())
+            # An atomic refresh may unlink this already opened private inode.
+            # It remains safe to read; additional hard links are refused.
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink > 1:
+                raise SystemExit("forge: refusing unsafe session cache file")
+            if info.st_mode & 0o077 or info.st_size > 4096:
+                return None
+            raw = stream.read(4097)
+        try:
+            value = json.loads(raw)
+            if (not isinstance(value, dict) or set(value) != {"version", "endpoint_sha256", "session_id"} or
+                    type(value["version"]) is not int or value["version"] != 1 or
+                    value["endpoint_sha256"] != hashlib.sha256(endpoint.encode()).hexdigest()):
+                return None
+            return _session_id(value["session_id"])
+        except (ValueError, UnicodeError):
+            return None  # Legacy unscoped text is never sent to a new endpoint.
+    finally:
+        os.close(parent)
+
+
+def _save_session(endpoint, sid):
+    content = json.dumps({"version": 1, "endpoint_sha256": hashlib.sha256(endpoint.encode()).hexdigest(), "session_id": _session_id(sid)}).encode()
+    parent, name = _cache_parent()
+    temporary = ".forge-session-" + uuid.uuid4().hex
+    try:
+        try:
+            info = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink != 1:
+                raise SystemExit("forge: refusing unsafe session cache file")
+        except FileNotFoundError:
+            pass
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, name, src_dir_fd=parent, dst_dir_fd=parent)
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=parent)
+        except FileNotFoundError:
+            pass
+        os.close(parent)
+
+
 def _handshake():
+    endpoint = _endpoint()
     _, sid = _post({"jsonrpc": "2.0", "id": _request_id(), "method": "initialize", "params": {
         "protocolVersion": "2025-03-26", "capabilities": {},
         "clientInfo": {"name": "forge-py", "version": "1.0"}}})
+    sid = _session_id(sid)
     _post({"jsonrpc": "2.0", "method": "notifications/initialized"}, sid)
-    os.makedirs(os.path.dirname(SESSION_FILE), exist_ok=True)
-    open(SESSION_FILE, "w").write(sid)
+    _save_session(endpoint, sid)
     return sid
 
 
 def _sid():
-    if os.path.exists(SESSION_FILE):
-        return open(SESSION_FILE).read().strip()
-    return _handshake()
+    return _cached_session(_endpoint()) or _handshake()
 
 
 def call(tool: str, args: dict) -> Any:
     payload = {"jsonrpc": "2.0", "id": _request_id(), "method": "tools/call",
                "params": {"name": tool, "arguments": args}}
     try:
-        msg, _ = _post(payload, _sid())
-    except urllib.error.HTTPError:
-        msg, _ = _post(payload, _handshake())  # stale MCP session — re-handshake
-    except urllib.error.URLError as e:
+        try:
+            msg, _ = _post(payload, _sid())
+        except urllib.error.HTTPError as error:
+            if error.code != 404:
+                raise SystemExit(f"forge: request failed with HTTP {error.code}; outcome may be uncertain and was not retried") from None
+            # Streamable HTTP defines 404 as an expired session. Other errors
+            # do not establish that a mutating command was never performed.
+            msg, _ = _post(payload, _handshake())
+    except (urllib.error.URLError, http.client.HTTPException, OSError, UnicodeError, ValueError):
         raise SystemExit(
-            f"forge: cannot reach {URL}: {e.reason}. Run `python3 tools/forge.py doctor`; "
+            "forge: transport or protocol failure; outcome may be uncertain and was not retried. Check the endpoint and daemon status; "
             "if Codex blocks localhost or user-cache access, request scoped permission."
         ) from None
-    if msg is None:
-        raise SystemExit("forge: empty response")
+    if not isinstance(msg, dict):
+        raise SystemExit("forge: missing or invalid daemon response; inspect session state before retrying")
     if "error" in msg:
-        raise SystemExit(f"forge: {msg['error'].get('message')}")
-    res = msg["result"]
+        code = msg["error"].get("code") if isinstance(msg["error"], dict) else None
+        suffix = " " + str(code) if type(code) is int else ""
+        raise SystemExit("forge: daemon returned a protocol error" + suffix + "; inspect session state locally before retrying")
+    res = msg.get("result")
+    if not isinstance(res, dict) or not isinstance(res.get("content", []), list):
+        raise SystemExit("forge: invalid daemon tool response")
     if res.get("isError"):
-        raise SystemExit("forge: " + "".join(c.get("text", "") for c in res.get("content", [])))
-    texts = [c.get("text", "") for c in res.get("content", []) if c.get("type") == "text"]
+        raise SystemExit("forge: daemon tool reported an error; inspect session state locally before retrying")
+    content = res.get("content", [])
+    if any(not isinstance(c, dict) or (c.get("type") == "text" and not isinstance(c.get("text", ""), str)) for c in content):
+        raise SystemExit("forge: invalid daemon content")
+    texts = [c.get("text", "") for c in content if c.get("type") == "text"]
     joined = "\n".join(texts)
     try:
         return json.loads(joined)
@@ -166,8 +305,7 @@ def _finish_command(out):
 
 def doctor():
     forge = _require_executable(
-        "forge", "Install it with `bun install -g forge-terminal-mcp`, `npm i -g forge-terminal-mcp`, "
-        "or `curl -fsSL https://forgemcp.dev/install.sh | sh` (no Node.js needed)."
+        "forge", "Review and install a pinned forge-terminal-mcp release using its official documentation, then rerun. This helper does not download or install it."
     )
     status_result = subprocess.run([forge, "status"], capture_output=True, text=True)
     status = status_result.stdout + status_result.stderr

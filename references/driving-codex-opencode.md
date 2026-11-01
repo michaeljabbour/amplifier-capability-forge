@@ -2,6 +2,14 @@
 
 Verified against locally installed binaries: **codex-cli 0.144.4** (`~/.local/bin/codex`, logged in via ChatGPT) and **opencode 0.15.19** (`/opt/homebrew/bin/opencode`). Claude Code also present (`~/.local/bin/claude`). Findings combine `--help` output, binary string extraction, and official docs (developers.openai.com/codex → learn.chatgpt.com; opencode.ai/docs).
 
+These are version-specific reference examples, not permission to run a task,
+spend, change trust or widen access. Use existing approved authentication and
+the authorized project scope. Select an explicit sandbox: read-only for review,
+and workspace-write only for authorized implementation. Dangerous bypass or
+rules-skipping options are syntax references, never unattended defaults. A
+separately approved, externally isolated experiment is a distinct decision;
+these options must never be used to get around a denial or an owner gate.
+
 ---
 
 ## 1. OpenAI Codex CLI
@@ -19,10 +27,12 @@ codex exec -m MODEL_ID "task"                     # model selection (also -c mod
 codex exec -C /path/to/repo "task"                # working root (agent cwd)
 codex exec --add-dir /other/writable "task"       # extra writable roots
 codex exec -s workspace-write "task"              # sandbox: read-only (default) | workspace-write | danger-full-access
-codex exec --dangerously-bypass-approvals-and-sandbox "task"   # no sandbox, no approvals ("yolo")
+# Syntax reference only: --dangerously-bypass-approvals-and-sandbox removes protections.
+# Never use it as a default or to get around a denied operation.
 codex exec --skip-git-repo-check "task"           # required when cwd is not a git repo (otherwise it refuses)
 codex exec --ephemeral "task"                     # don't persist a session file
-codex exec --ignore-user-config --ignore-rules    # skip ~/.codex/config.toml and execpolicy .rules
+# Syntax reference only: --ignore-user-config / --ignore-rules skip config/policy inputs.
+# They do not authorize ignoring the host's rules or changing persistent trust.
 codex exec -c key=value -p <profile> "task"       # config override / profile ($CODEX_HOME/<name>.config.toml layered on base)
 CODEX_API_KEY=sk-... codex exec --json "task"     # per-invocation API-key auth (automation)
 ```
@@ -83,9 +93,9 @@ Slash commands (0.14x): `/model`, `/permissions` (formerly `/approvals` — curr
 - Codex sets the terminal title and emits OSC 9 desktop notifications on turn completion (`codex_tui::notifications::osc9`) — an orchestrator that parses OSC sequences can use the notification as a turn-complete event instead of scraping.
 
 **First-run gates a PTY driver must handle:**
-1. **Auth onboarding**: picker with `Sign in with ChatGPT` (browser OAuth; on headless machines there's a device-code path: "Preparing device code login... Open this link... Enter this one-time code") vs API key. Pre-empt entirely with `codex login --with-api-key` (key via stdin: `printenv OPENAI_API_KEY | codex login --with-api-key`), `--device-auth`, or `CODEX_API_KEY` env for exec. Check state with `codex login status` (exit 0 + `Logged in using ChatGPT` / API key; non-zero when not logged in). Creds live in `~/.codex/auth.json`.
-2. **Directory trust prompt**: in a new folder, an onboarding question asks whether to trust the directory (strings: `... as a trusted project in ...`, `is not trusted`, `Answer the questions to continue.`, `Press enter to continue`); it recommends an approval preset (Read Only / Auto / Full Access). Trust decisions persist to `~/.codex/config.toml` under `[projects."<path>"] trust_level = "trusted"` — pre-seed that key with `-c` or by writing config to skip the prompt.
-3. **Hooks review** (if project defines hooks): `Hooks need review` screen with `Trust all and continue` / `Continue without trusting`; bypass with `--dangerously-bypass-hook-trust`.
+1. **Auth onboarding**: picker with `Sign in with ChatGPT` (browser OAuth; on headless machines there's a device-code path: "Preparing device code login... Open this link... Enter this one-time code") vs API key. Check existing state with `codex login status` (exit 0 + `Logged in using ChatGPT` / API key; non-zero when not logged in). If authentication is missing, stop for the owner's decision. A separately authorized login can use the documented `--device-auth` or existing-key stdin route (`codex login --with-api-key`); `CODEX_API_KEY` is also an exec interface. Do not create credentials, copy auth stores or print keys to pre-empt this gate. The credential location `~/.codex/auth.json` is descriptive, not an instruction to read it.
+2. **Directory trust prompt**: in a new folder, an onboarding question asks whether to trust the directory (strings: `... as a trusted project in ...`, `is not trusted`, `Answer the questions to continue.`, `Press enter to continue`); it recommends an approval preset (Read Only / Auto / Full Access). Stop for the owner's native review of the exact directory and requested access. Trust decisions persist to `~/.codex/config.toml` under `[projects."<path>"] trust_level = "trusted"`; this describes storage only. Do not pre-seed the key, edit configuration or simulate acceptance to skip the prompt.
+3. **Hooks review** (if project defines hooks): a `Hooks need review` screen offers `Trust all and continue` / `Continue without trusting`. Let the owner review the hooks and choose. `--dangerously-bypass-hook-trust` is a dangerous syntax reference, not a continuation procedure; do not use it to bypass review or a denial.
 4. **Update prompts / model-switch prompts** can appear (`Try new model` / `Use existing model`, `Press enter to continue`).
 
 ### 1.3 Sessions on disk, resume, AGENTS.md
@@ -115,7 +125,7 @@ opencode run --attach http://localhost:4096 "task"     # run against a remote/ru
 
 - `--format json` emits JSONL events: `step_start`, `text`, `tool_use` (with tool name, input, output, metadata incl. command exit codes), `step_finish` (final; tokens + cost). Known bug class: the process can exit after the session goes idle but before flushing the final `step_finish` — don't hard-require it; treat **process exit** as completion and `step_finish` as best-effort metadata (github.com/sst/opencode issues).
 - Exit codes are not documented; 0 on success, non-zero on errors (auth/model/provider failures print to stderr). Newer releases add `--auto` (auto-approve permissions not explicitly denied) and `--fork`; 0.15.19 predates some of these — check `opencode run --help` per version.
-- Permissions: configured in `opencode.json` (`"permission": {"edit":"allow","bash":"ask",...}`); in `run` mode "ask" permissions block — configure `allow` for unattended runs.
+- Permissions: configured in `opencode.json` (`"permission": {"edit":"allow","bash":"ask",...}`); in `run` mode "ask" permissions may block. Stop and report the requested operation, or use only the narrow commands/paths the owner already authorized. Do not change global rules or grant blanket `allow` merely to make an unattended run continue. New access or permission changes require a separate owner decision.
 
 ### 2.2 Server mode — the best non-PTY option
 

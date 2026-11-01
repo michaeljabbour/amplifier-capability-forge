@@ -104,22 +104,43 @@ can resume from the same state file.
 
 ## Requirements
 
-- Python 3.9 or later; no Python packages are required.
-- [Forge](https://github.com/ferodrigop/forge) — install one of:
+- Python 3.11 or later; no Python packages are required. The native client's
+  private cache uses POSIX descriptor-relative, no-follow file operations.
+- [Forge](https://github.com/ferodrigop/forge) — review its official installation
+  instructions and choose a pinned release before installing. This helper does
+  not download or install the daemon. Do not pipe a mutable remote installer
+  directly into a shell.
 
-  ```bash
-  bun install -g forge-terminal-mcp                  # bun (recommended)
-  npm install -g forge-terminal-mcp                  # npm (Node.js >= 18)
-  curl -fsSL https://forgemcp.dev/install.sh | sh    # standalone binary (no Node.js)
-  ```
-
-  No daemon setup is needed: `python3 tools/forge.py doctor` starts the daemon
-  if it is not already running (`forge start -d`). Add
+  With the machine owner's authorization, `python3 tools/forge.py doctor` can
+  start the daemon if it is not already running (`forge start -d`). Add
   `forge start -d --dashboard --port 3141` yourself if you want the web
   dashboard at [http://127.0.0.1:3141/](http://127.0.0.1:3141/).
 - Any harnesses you want to drive: `claude`, `codex`, `gemini`, `opencode`, or
   `amplifier`.
 - Git for artifact-gated relays and worktree isolation.
+
+## Endpoint and session-cache boundaries
+
+The client defaults to `http://127.0.0.1:3141/mcp`. `FORGE_URL` accepts
+loopback HTTP(S) endpoints. A remote endpoint requires HTTPS and the caller's
+explicit `FORGE_ALLOW_REMOTE=1` opt-in. Review that destination first: terminal
+commands, prompts and the daemon protocol session header go to it. The client
+does not follow redirects or use environment proxies. URL credentials, query
+strings and fragments are refused; do not put secrets in endpoint URLs.
+
+Existing remote configurations must opt in explicitly and use HTTPS. No local
+configuration is changed by installing or updating this repository. The
+existing `~/.cache/forge-py-mcp-session` path now contains a private, versioned
+JSON record bound to the exact endpoint. Old unscoped cache text is not reused;
+the next authorized operation negotiates a fresh protocol session. This cache
+is not the daemon's terminal/history store, which the migration does not edit.
+Symlinked, hard-linked or unsafe cache locations are refused rather than
+followed. The cache needs POSIX no-follow, descriptor-relative file operations.
+
+HTTP failures are not automatic permission to repeat a terminal command. The
+client makes one session-renewal retry for MCP's expired-session HTTP 404;
+other HTTP failures stop with an uncertain outcome for the caller to inspect.
+See the [MCP transport session rules](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#session-management).
 
 ## Install the skill
 
@@ -292,7 +313,7 @@ python3 "$FORGE" wait "$SID" "Completed" --timeout 29000
 
 ```bash
 python3 "$FORGE" delegate claude "audit the parser and report risks" --cwd /repo
-python3 "$FORGE" delegate codex "review this diff" --cwd /repo
+python3 "$FORGE" codex-exec "review this diff" --cwd /repo --sandbox read-only
 python3 "$FORGE" codex-exec "implement the approved fix" --cwd /repo \
   --sandbox workspace-write
 ```

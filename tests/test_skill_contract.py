@@ -100,8 +100,8 @@ class SkillContractTests(unittest.TestCase):
 
     def test_python_tools_remain_stdlib_only(self):
         allowed = {
-            "argparse", "datetime", "glob", "hashlib", "json", "os", "pathlib", "re",
-            "shutil", "subprocess", "sys", "tempfile", "time", "typing", "urllib", "uuid",
+            "argparse", "datetime", "glob", "hashlib", "http", "ipaddress", "json", "os", "pathlib", "re",
+            "shutil", "stat", "subprocess", "sys", "tempfile", "time", "typing", "urllib", "uuid",
         }
         for relative in ("tools/forge.py", "tools/relay.py"):
             imports = set()

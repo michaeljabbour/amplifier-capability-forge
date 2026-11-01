@@ -3,6 +3,12 @@
 ## 1. HEADLESS/SCRIPTED MODE
 
 ### Basic Invocation
+
+Examples are reference syntax for an authorized task, not permission to run a
+provider, spend, edit files or change access. Use existing approved credentials,
+the selected project and the agreed tool/budget limits. Installed-version and
+host-policy behavior can differ from this reference; a denied operation or
+owner gate means stop, not try a bypass option.
 ```bash
 # Simple prompt, non-interactive
 claude -p "prompt text"
@@ -93,10 +99,13 @@ claude -p "Extract function names" \
 - No `AskUserQuestion` tool; auto-denies explicit `ask` rules
 - Aborts session on denied call (no user to prompt)
 
-**bypassPermissions mode** (container/VM only):
-- Skips all permission checks
-- Still prompts for: `rm -rf /`, `rm -rf ~`, commands with command substitution or process substitution, explicit `ask` rules, `requiresUserInteraction` MCP tools
-- Circuit breaker: filesystem root/home removals always prompt
+**bypassPermissions mode** (syntax reference only):
+- Disables normal permission checks. It is not a default for unattended work.
+- Any exception needs separate owner approval and an externally isolated
+  environment. Never select it to get around a denial or trust decision.
+- Do not rely on a claim that destructive commands will always prompt; native
+  version, tool and policy behavior varies. Never test that boundary with root
+  or home removal commands. Keep the authorized sandbox and artifact gates.
 
 **auto mode** (with classifier):
 - Classifier evaluates actions against default rules

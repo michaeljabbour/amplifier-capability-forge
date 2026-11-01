@@ -13,15 +13,23 @@ Research based on shallow clones of `microsoft/amplifier` and `microsoft/amplifi
 
 ## 2. Installation and Launch
 
+Use an existing approved installation when possible. Installing or trying a
+package executes code and needs a separate owner decision about its source,
+version, permissions and rollback. If `uv` is missing, use its reviewed upstream
+installation procedure; do not pipe a downloaded script directly into a shell.
+Inspect and verify approved installer bytes before execution.
+
+These are templates, not an approved version selection. Replace the placeholder
+with a reviewed full commit SHA only after installation is authorized. An entry
+repository SHA does not by itself pin every transitive dependency; use the
+reviewed dependency/lock procedure for the selected version.
+
 ```bash
-# Prereq: uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# With an already approved uv installation:
+uv tool install 'git+https://github.com/microsoft/amplifier@<REVIEWED_FULL_COMMIT_SHA>'
 
-# Install (uv tool — this is the official method)
-uv tool install git+https://github.com/microsoft/amplifier
-
-# Or try without installing
-uvx --from git+https://github.com/microsoft/amplifier amplifier
+# A trial run also downloads/executes code; it needs the same review and approval.
+uvx --from 'git+https://github.com/microsoft/amplifier@<REVIEWED_FULL_COMMIT_SHA>' amplifier
 ```
 - Platforms: macOS, Linux, WSL. Native Windows shells have known issues.
 - Entry point: `amplifier = amplifier_app_cli.main:main` (pyproject pulls `amplifier-app-cli @ git+...@main`).
@@ -58,7 +66,19 @@ amplifier update --yes|-y       # skip confirmations; also --force, --verbose
 amplifier module refresh [name] [--mutable-only]
 amplifier bundle refresh [name] [--mutable-only]
 ```
-Immutable refs (tags/SHAs) are never auto-updated. Recovery procedure if update breaks things: `rm -rf ~/.amplifier` (or selectively keep `projects/` for transcripts), `uv cache clean`, `uv tool uninstall amplifier`, reinstall, `amplifier init` (docs/USER_ONBOARDING.md "Clean Reinstall").
+Use the check-only result to select the approved sources before any update.
+`--yes` and `--force` describe CLI options; they do not authorize changing
+unrelated bundles, credentials or security settings.
+
+Immutable refs (tags/SHAs) are never auto-updated. If an update fails, preserve
+the failing version and diagnostics, then identify the affected bundle, module
+or environment. Before an owner-approved repair or rollback, verify restorable
+backups of configuration, project data and session/history routing. Handle any
+credentials privately through the owner's existing mechanism. Keep the original
+profile and evidence until the replacement and history resume have been checked.
+Do not delete the whole `~/.amplifier` directory, clear all caches, uninstall or
+reinitialize a profile as a generic recovery step. Consult the reviewed recovery
+procedure for the installed version and agree on the exact affected paths first.
 
 ## 3. The Interactive Session
 

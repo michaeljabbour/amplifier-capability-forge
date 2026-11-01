@@ -184,7 +184,7 @@ sources:
 ```
 Or per-session: `export AMPLIFIER_MODULE_TOOL_FOO=/path/to/checkout`
 
-**Cache gotchas:** bundles/modules cache to `~/.amplifier/cache/` and are editable-installed; a running session holds them in `sys.modules`, so edits to cached files do nothing until restart. Never `rm -rf ~/.amplifier/cache/*` and never edit cache files. Safe refresh: `amplifier reset --remove cache -y` or `amplifier bundle refresh [name]` / `amplifier module refresh [id]` (mutable refs like `@main` only — tags/SHAs never auto-refresh).
+**Cache gotchas:** bundles/modules cache to `~/.amplifier/cache/` and may be editable-installed; a running session can retain imported code. Do not edit or bulk-clear caches to force an active session to change. Inspect the current CLI help, affected source pins and active owners first. Prefer an owner-authorized targeted `amplifier bundle refresh [name]` or `amplifier module refresh [id]` for mutable refs; retain prior pins and scoped backups for rollback. Tags/SHAs remain pinned. A broader reset or restart requires a separately reviewed maintenance window and must preserve configuration, working edits and session/history data.
 
 ---
 

@@ -26,6 +26,13 @@ directory** (the folder containing this SKILL.md — resolve it first and export
 forge daemon over HTTP, so it works even where forge's MCP tools are not
 connected.
 
+The client defaults to the loopback daemon. `FORGE_URL` accepts loopback
+HTTP(S); a reviewed remote HTTPS endpoint additionally requires
+`FORGE_ALLOW_REMOTE=1`. Commands/prompts and the protocol session identifier go
+to that selected daemon. Redirects and environment proxies are refused. Never
+set a remote endpoint or opt-in on someone else's behalf. Credentials, query
+strings and fragments in endpoint URLs are refused.
+
 For artifact-gated multi-agent work, also resolve
 `RELAY=<skill-dir>/tools/relay.py`. It maintains a private, resumable ledger and
 drives `forge.py`; use it instead of reconstructing relay state in chat.
@@ -80,7 +87,7 @@ the user's request and the active `AGENTS.md` delegation policy.
 ```bash
 # Fire-and-collect (blocks up to --timeout, returns output + sessionId):
 python3 "$FORGE" delegate claude "fix the failing test" --cwd /repo --model haiku
-python3 "$FORGE" delegate codex "review this diff" --cwd /repo # permissions not explicit
+python3 "$FORGE" codex-exec "review this diff" --cwd /repo --sandbox read-only
 python3 "$FORGE" codex-exec "fix the failing test" --cwd /repo --sandbox workspace-write
 python3 "$FORGE" delegate claude "start refactor" --cwd /repo --mode interactive
 AGENT_SID=SESSION_ID # copy sessionId from the JSON result above

@@ -119,13 +119,21 @@ No pipeline-specific CLI flags; the goal lives in the DOT: `graph [goal="Add inp
 
 3. **Standalone CLI** (`modules/pipeline-runner`, script name `attractor`):
 ```bash
+# @file reads file contents; use only an authorized worklist.
 attractor run pipeline.dot \
   --param goal="Fix the flaky test" \
-  --param worklist=@path/to/checklist.md \   # @file reads file contents
+  --param worklist=@path/to/checklist.md \
   --provider anthropic --logs-root ./runs \
-  --cwd . --on-human-gate fail|auto-approve
+  --cwd . --on-human-gate fail
 attractor doctor    # environment diagnostics
 ```
+
+For real work, a human gate stops for the owner's decision; a timeout is not
+approval. `auto-approve` is reference syntax only for a separately authorized
+synthetic fixture with no real consent, deployment or access decision. It must
+not replace the owner's review in an unattended pipeline. Provider execution,
+spending and diagnostic/service operations also retain their normal authority
+requirements.
 
 4. **Programmatically**: `DirectProviderBackend` (LLM-only) or full Amplifier session with `session.spawn` registered → `AmplifierBackend` (each node gets a tool-equipped child session). Falls back to simulation mode with neither.
 
@@ -165,7 +173,20 @@ generate_utils [shape=folder, dot_file="convergence-factory.dot",
 - **Observability hooks** (`hooks-pipeline-observability`): a StateAggregator plus a `StatusBarContributor` that injects a ≤7-line live pipeline status into the driving session's context; `hooks-pipeline-progress` reports stage progress; `tool-pipeline-status` and `tool-dashboard-query` (HTTP API) let an agent/UI query execution state.
 
 ### Resumability: graph-level, not engine-level
-The blessed pattern (`examples/pipelines/12-graph-resume.md`): each stage writes a **durable artifact** (`.ai/smells.md`, `.ai/refactor-plan.md`, `.ai/snapshot.txt`, `.ai/STATE.json` with `{"tests_passed": bool}`); a cheap `parallelogram` guard node before each stage tests for the artifact and prints `done`/`todo`; edges route on `context.tool.last_line`. Crash recovery = just re-run; guards self-skip completed stages. Rewind = delete an artifact (`rm .ai/refactor-plan.md`) and re-run; `rm -rf .ai/` starts fresh. Rationale: engine-level checkpoint replay fails on edge-structure mismatch and graph drift; guard nodes re-evaluate real filesystem state every run — "No goto, no jump, no engine resume API."
+The upstream example (`examples/pipelines/12-graph-resume.md`) uses **durable
+artifacts** (`.ai/smells.md`, `.ai/refactor-plan.md`, `.ai/snapshot.txt`,
+`.ai/STATE.json`) and `parallelogram` guard nodes that route `done`/`todo` via
+`context.tool.last_line`. Artifact presence alone does not establish a valid
+completed stage. Before resuming, validate the artifact against the current
+inputs/source and required test/review evidence; do not skip a failed or unknown
+gate. Preserve original checkpoints, stage outputs and evaluation history.
+
+Rewinding needs an owner-approved scope and verified restorable backups. Review
+which stage artifacts must be invalidated using the workflow's documented
+recovery procedure, then verify the resumed result. Do not delete the entire
+`.ai/` tree or use a generic recursive removal as a fresh-start procedure.
+The example's engine-replay caveat remains relevant when graph structure changes;
+guards must recheck real state and provenance rather than trust a stale marker.
 
 Other stopping/safety rails: per-node `timeout` (`"30s"`, `"2m"`), human gates (`shape=hexagon`) with labeled choices (`review_gate -> done [label="[S] Ship it!"]`), fidelity modes (`full|compact|truncate|summary:high`) controlling context carryover, `thread_id` for shared context across loop iterations, loop-agent-level loop detection (`modules/loop-agent/loop_detection.py`).
 
@@ -199,11 +220,17 @@ Three-tier data strategy: events pushed (SSE), state polled, large data fetched 
 
 **Resolver protocol** (JSON-RPC over stdio; `docs/RESOLVER_GUIDE.md`): a resolver is a plugin with `manifest.json` (`command`, `supports_resume` — "Set true if your resolver can checkpoint and resume", `capabilities_required`, container setup, optional `viewport_bundle` UI) and a class implementing `get_instantiation_schema()`, `get_workspace_spec()`, and `async def run(self, *, resume: bool = False)` which `emit()`s events, may `request_input()`, and ends with `self.complete(result)` or `self.fail(error)` (exit 0 success / 1 fatal / 2 transient-retriable). Scaffold + local loop:
 ```bash
+# Synthetic hello-world fixture only, after owner approval of its local setup.
 amplifier-resolve init-resolver hello-world
-cd hello-world && uv pip install -e . amplifier-resolver-sdk
+cd hello-world
+# Use a reviewed environment/lock with the already approved resolver SDK and project.
 amplifier-resolve test-resolver . --params '{"task": "greetings"}' --auto-approve
 amplifier-resolve resolver add git+https://github.com/you/hello-world
 ```
+
+The fixture's `--auto-approve` does not approve a real owner decision. Installing
+its SDK/project, registering a resolver or changing permissions is a separate
+operation; stop if that setup has not already been reviewed and authorized.
 
 **Three shipped resolvers** (the three loop styles):
 - **`dot-graph`** — runs Attractor DOT pipelines directly ("DOT-graph pipelines via attractor engine; each node is an independent Amplifier session" with full tools); its hook bridge writes an indexed `pipeline-status/` snapshot after each `pipeline:node_complete` event for the Mission Control viewport (live Graphviz-WASM graph). This is edge-10: attractor consumed as an upstream library (installed from `@main`, noted as unpinned).
@@ -211,16 +238,25 @@ amplifier-resolve resolver add git+https://github.com/you/hello-world
 - **`understudy`** — phase-driven: upfront intent alignment → dialogue → synthesis → approval → in-process asyncio workers → **independent verification** (LLM verifier for code inspection; a reality-check DTU for command-execution/browser journeys).
 
 ### How a user drives it
+
+The following are installation/startup templates, not an instruction to adopt
+new dependencies. Prefer existing approved tooling. The owner must approve the
+sources, versions, permissions, credentials and rollback; inspect/verify approved
+installer bytes and dependency locks before execution. Replace each placeholder
+with its own reviewed immutable commit. No trusted version is selected here,
+and a Git entry SHA alone does not pin transitive dependencies. Never substitute
+a mutable branch merely to make the template run.
+
 ```bash
 # Full stack, direct on host
-uv tool install 'git+https://github.com/microsoft/amplifier-resolve@main' \
-  --with 'amplifier-resolver-dot-graph @ git+https://github.com/microsoft/amplifier-resolver-dot-graph@main' \
-  --with 'amplifier-resolver-orchestrator @ git+https://github.com/microsoft/amplifier-resolver-orchestrator@main' \
-  --with 'amplifier-resolver-understudy @ git+https://github.com/microsoft/amplifier-resolver-understudy@main'
-export ANTHROPIC_API_KEY=sk-... ; export GH_TOKEN=ghp_...
+uv tool install 'git+https://github.com/microsoft/amplifier-resolve@<REVIEWED_CORE_COMMIT>' \
+  --with 'amplifier-resolver-dot-graph @ git+https://github.com/microsoft/amplifier-resolver-dot-graph@<REVIEWED_DOT_GRAPH_COMMIT>' \
+  --with 'amplifier-resolver-orchestrator @ git+https://github.com/microsoft/amplifier-resolver-orchestrator@<REVIEWED_ORCHESTRATOR_COMMIT>' \
+  --with 'amplifier-resolver-understudy @ git+https://github.com/microsoft/amplifier-resolver-understudy@<REVIEWED_UNDERSTUDY_COMMIT>'
+# Use existing owner-approved credentials; do not print keys or read auth stores.
 amplifier-resolve --port 10120
 curl http://localhost:10120/api/health          # {"status": "ok"}
-npx -y github:microsoft/amplifier-app-resolve#main serve --port 18174   # frontend
+npx 'github:microsoft/amplifier-app-resolve#<REVIEWED_FRONTEND_COMMIT>' serve --port 18174
 
 # Full stack in a DTU (containerized), from this bundle's scripts/
 ./scripts/resolve-stack.sh            # non-dev default
