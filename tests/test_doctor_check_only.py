@@ -23,7 +23,7 @@ class DoctorCheckOnlyTests(unittest.TestCase):
             return output.getvalue()
 
     def test_running_status_is_not_reported_as_terminal_acceptance(self):
-        output = self.invoke(subprocess.CompletedProcess([], 0, "Forge running", ""))
+        output = self.invoke(subprocess.CompletedProcess([], 0, "", "Forge daemon: running (PID 12345)\n  URL: http://127.0.0.1:3141\n"))
         self.assertIn("terminal creation not checked", output)
 
     def test_stopped_status_never_starts_a_daemon(self):
@@ -48,6 +48,11 @@ class DoctorCheckOnlyTests(unittest.TestCase):
             self.assertEqual(process.call_count, 1)
             self.assertEqual(process.call_args.args[0], ["/fictional/forge", "status"])
             rpc.assert_not_called(); chmod.assert_not_called(); sleep.assert_not_called()
+
+    def test_negated_or_unsupported_formats_are_not_guessed_from_substrings(self):
+        for stdout, stderr in [("Forge is not currently running", ""), ("Forge is no longer running", ""), ("running: false", ""), ("Forge running", ""), ("Forge daemon: running (PID 12345)", ""), ("", "Forge daemon: running (PID 0)"), ("", "notice\nForge daemon: running (PID 12345)")]:
+            with self.subTest(stdout=stdout, stderr=stderr), self.assertRaises(SystemExit):
+                self.invoke(subprocess.CompletedProcess([], 0, stdout, stderr))
 
 
 if __name__ == "__main__":

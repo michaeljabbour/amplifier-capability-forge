@@ -48,7 +48,9 @@ python3 "$FORGE" doctor --check-only
 
 This calls the installed daemon CLI's status command. It does not create a
 terminal or prove terminal readiness. A stopped or unrecognized status fails
-without attempting startup or repair.
+without attempting startup or repair. The recognized header is the first stderr
+line emitted by `forge-terminal-mcp` 0.9.0: `Forge daemon: running (PID <positive integer>)`.
+Other versions/formats need a reviewed adapter; do not infer status from a word match.
 
 Use plain `doctor` only when the operator has authorized startup/repair. It may
 create a probe terminal, write the private protocol cache, change helper execute

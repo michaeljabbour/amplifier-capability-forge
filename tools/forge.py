@@ -311,7 +311,12 @@ def doctor(*, check_only=False):
     status = status_result.stdout + status_result.stderr
     running = not status_result.returncode and "not running" not in status.lower() and "running" in status.lower()
     if check_only:
-        if not running:
+        # forge-terminal-mcp 0.9.0 cmdStatus writes this first stderr line.
+        # Do not guess from arbitrary mentions of "running" or negated prose.
+        lines = status_result.stderr.splitlines()
+        recognized = (not status_result.returncode and bool(lines) and
+                      re.fullmatch(r"Forge daemon: running \(PID [1-9][0-9]*\)", lines[0]) is not None)
+        if not recognized:
             raise SystemExit("forge: daemon status not verified as running; no start or repair attempted in --check-only mode")
         print("forge: daemon reports running; terminal creation not checked (--check-only)")
         return

@@ -45,6 +45,8 @@ python3 tools/forge.py doctor --check-only
 
 The status-only command does not prove a terminal can start. When startup or repair is needed, obtain the operator's approval before plain `doctor`; its recovery can restart the shared daemon and change helper execute bits.
 
+Status-only recognition is bounded to the first stderr header used by `forge-terminal-mcp` 0.9.0 (`Forge daemon: running (PID <positive integer>)`) with a zero exit code. Other formats fail as unverified; the helper does not guess from text such as “not currently running.” This source-format check is not live daemon acceptance.
+
 ## Evidence and limits
 
 Unit and isolated integration checks cover client and relay behavior. The portable release check deliberately does not start a daemon or prove that a particular TUI works.

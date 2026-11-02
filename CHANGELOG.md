@@ -4,6 +4,7 @@
 
 - Add `doctor --check-only` for an installed daemon CLI status query without startup, terminal probing, helper permission repair or restart by this helper. Keep plain `doctor` behavior compatible and distinguish status from terminal acceptance.
 - Make the method's startup/repair authority checkpoint explicit. No real daemon or process was changed by the isolated fixture checks.
+- Restrict check-only status recognition to the reviewed 0.9.0 first-stderr header. Preserve the independently found negated-status failures as development evidence; unknown formats remain unverified rather than guessed.
 
 ## 2026-11-01 — Transport and operator boundaries
 
