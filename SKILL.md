@@ -39,17 +39,22 @@ drives `forge.py`; use it instead of reconstructing relay state in chat.
 
 ## Before the first Forge operation
 
-Run `doctor` before creating or driving a Forge session. Skip it when only
-reading this skill's references or reviewing source files.
+For availability diagnosis without startup or repair authority, begin with
+`doctor --check-only`. Skip diagnostics when only reading references or source.
 
 ```bash
-python3 "$FORGE" doctor  # starts daemon if down; auto-fixes node-pty spawn-helper exec bit
+python3 "$FORGE" doctor --check-only
 ```
 
-`doctor` may start a local daemon and write its MCP session cache under the
-user's cache directory. If Codex blocks localhost access or an out-of-workspace
-repair, request only the permission needed for that operation. Do not bypass
-the Codex sandbox globally.
+This calls the installed daemon CLI's status command. It does not create a
+terminal or prove terminal readiness. A stopped or unrecognized status fails
+without attempting startup or repair.
+
+Use plain `doctor` only when the operator has authorized startup/repair. It may
+create a probe terminal, write the private protocol cache, change helper execute
+bits and restart the shared daemon. A terminal task alone does not authorize
+those repairs. If access is blocked, request only the permission needed for the
+specific operation; never bypass the sandbox globally.
 
 ## Core loop: spawn → drive → observe → assert → teardown
 

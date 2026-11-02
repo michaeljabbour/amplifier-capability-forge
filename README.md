@@ -33,15 +33,17 @@ Try this first task:
 - Python 3.11 or later for the portable install helper.
 - The packaged Python HTTP client and relay are stdlib-only.
 - Real terminal operations need a reachable Forge daemon; the native guide covers its Node/Bun installation.
-- Doctor can start the daemon and repair its helper. Read that behavior before running it on a shared machine.
+- `doctor --check-only` reports the installed daemon CLI's status without startup or repair. Plain `doctor` can start/restart the daemon and repair its helper; use it only with that authority.
 
 For the optional native interface, use a project virtual environment:
 
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-python3 tools/forge.py doctor
+python3 tools/forge.py doctor --check-only
 ```
+
+The status-only command does not prove a terminal can start. When startup or repair is needed, obtain the operator's approval before plain `doctor`; its recovery can restart the shared daemon and change helper execute bits.
 
 ## Evidence and limits
 
@@ -426,8 +428,9 @@ See [AGENTS.md](AGENTS.md) for repository invariants and
 
 ## Troubleshooting
 
-- Run `python3 tools/forge.py doctor` first. It starts Forge and repairs the
-  common `node-pty` `spawn-helper` execute-bit failure.
+- Inspect `python3 tools/forge.py doctor --check-only` first when only diagnosis
+  is authorized. Plain `doctor` starts Forge and can repair the common `node-pty`
+  helper failure; that repair may restart a shared daemon and needs operator authority.
 - Forge waits cap near 30 seconds server-side. Use repeated 29-second waits or
   `relay.py wait --attempts N`.
 - Fresh PTY shells need about two seconds before their first command.

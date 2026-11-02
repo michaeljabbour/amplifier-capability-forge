@@ -7,7 +7,7 @@ when forge's MCP tools aren't connected to the calling harness — any agent
 that can run python3 can spin up, fan out, drive, and tear down terminals.
 
 Generic terminal commands:
-  doctor                                   ensure daemon healthy (auto-fixes node-pty spawn-helper)
+  doctor [--check-only]                    status only, or authorized daemon startup/repair
   new [--name N] [--cwd DIR] [--tag T]...  spawn PTY -> prints session id (sleep 2 before first cmd)
       [--cols 120] [--rows 36] [--program CMD] [--args ...] [--arg VALUE]...
   type <id> <text> [--no-newline]          send text
@@ -303,13 +303,19 @@ def _finish_command(out):
     return 0
 
 
-def doctor():
+def doctor(*, check_only=False):
     forge = _require_executable(
         "forge", "Review and install a pinned forge-terminal-mcp release using its official documentation, then rerun. This helper does not download or install it."
     )
     status_result = subprocess.run([forge, "status"], capture_output=True, text=True)
     status = status_result.stdout + status_result.stderr
-    if status_result.returncode or "not running" in status.lower() or "running" not in status.lower():
+    running = not status_result.returncode and "not running" not in status.lower() and "running" in status.lower()
+    if check_only:
+        if not running:
+            raise SystemExit("forge: daemon status not verified as running; no start or repair attempted in --check-only mode")
+        print("forge: daemon reports running; terminal creation not checked (--check-only)")
+        return
+    if not running:
         started = subprocess.run([forge, "start", "-d"], capture_output=True, text=True)
         if started.returncode:
             detail = (started.stderr or started.stdout).strip()
@@ -362,7 +368,8 @@ def _spawn_args(a):
 def main():
     p = argparse.ArgumentParser(prog="forge.py")
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("doctor")
+    diagnostic = sub.add_parser("doctor")
+    diagnostic.add_argument("--check-only", action="store_true", help="inspect installed daemon status without starting, probing a terminal or repairing it")
 
     n = sub.add_parser("new")
     n.add_argument("--name"); n.add_argument("--cwd"); n.add_argument("--program")
@@ -425,7 +432,8 @@ def main():
     a = p.parse_args()
 
     if a.cmd == "doctor":
-        doctor()
+        if a.check_only: doctor(check_only=True)
+        else: doctor()
     elif a.cmd == "new":
         args = {"cols": a.cols, "rows": a.rows}
         if a.name: args["name"] = a.name

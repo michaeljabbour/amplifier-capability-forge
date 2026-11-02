@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — explicit status-only diagnosis
+
+- Add `doctor --check-only` for an installed daemon CLI status query without startup, terminal probing, helper permission repair or restart by this helper. Keep plain `doctor` behavior compatible and distinguish status from terminal acceptance.
+- Make the method's startup/repair authority checkpoint explicit. No real daemon or process was changed by the isolated fixture checks.
+
 ## 2026-11-01 — Transport and operator boundaries
 
 - Keep the daemon local by default; require explicit remote HTTPS opt-in and refuse URL credentials, redirects and ambient proxy forwarding.
